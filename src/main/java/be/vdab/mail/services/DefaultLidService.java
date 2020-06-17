@@ -1,8 +1,10 @@
 package be.vdab.mail.services;
 
 import be.vdab.mail.domain.Lid;
+import be.vdab.mail.exceptions.KanMailNietZendenException;
 import be.vdab.mail.mailing.LidMailing;
 import be.vdab.mail.repositories.LidRepository;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,7 +12,7 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class DefaultLidService implements LidService{
+public class DefaultLidService implements LidService {
     private final LidRepository repository;
     private final LidMailing mailing;
 
@@ -31,5 +33,14 @@ public class DefaultLidService implements LidService{
     @Transactional(readOnly = true)
     public Optional<Lid> findById(long id) {
         return repository.findById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Scheduled(fixedRate = 60_000)
+    public void stuurMailMetAantalLeden() {
+            var aantalLeden = repository.count();
+            mailing.stuurMailMetAantalLeden(aantalLeden);
+
     }
 }
